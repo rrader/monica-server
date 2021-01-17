@@ -3,18 +3,20 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"strconv"
 
 	_ "github.com/lib/pq"
 )
 
 // Barcode entity from DataBase
 type Barcode struct {
-	ID   int
+	ID   int `json:"-"`
 	Code string
 	Name string
 }
 
-const (
+var (
 	dbHost     = "localhost"
 	dbPort     = 5432
 	dbUser     = "postgres"
@@ -41,6 +43,33 @@ func GetDB() *sql.DB {
 	return db
 }
 
+func getenvInt(key string, fallback int) int {
+	var value string
+	value = os.Getenv(key)
+	if len(value) == 0 {
+		return fallback
+	}
+	valInt, err := strconv.Atoi(value)
+	if err != nil {
+		panic(err)
+	}
+	return valInt
+}
+
+func getenvString(key, fallback string) string {
+	value := os.Getenv(key)
+	if len(value) == 0 {
+		return fallback
+	}
+	return value
+}
+
 func init() {
+	dbHost = getenvString("MONICA_DBHOST", dbHost)
+	dbPort = getenvInt("MONICA_DBPORT", dbPort)
+	dbUser = getenvString("MONICA_DBUSER", dbUser)
+	dbPassword = getenvString("MONICA_DBPASS", dbPassword)
+	dbName = getenvString("MONICA_DBNAME", dbName)
+
 	db = openConnection()
 }
